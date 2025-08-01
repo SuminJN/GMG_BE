@@ -15,3 +15,17 @@ spring:
         properties:
             hibernate:
                 format_sql: true
+
+oauth:
+    kakao:
+        client-id: ${KAKAO_REST_API_KEY}
+        redirect-uri: http://localhost:8080/oauth/kakao/callback
+        token-uri: https://kauth.kakao.com/oauth/token
+        user-info-uri: https://kapi.kakao.com/v2/user/me
+
+jwt:
+    secret: ${JWT_SECRET_KEY}
+    expiration: 3600000 # 1시간
+
+frontend:
+    redirect-base-url: ${FRONTEND_REDIRECT_BASE_URL}

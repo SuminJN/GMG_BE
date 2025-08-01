@@ -21,6 +21,8 @@ public class StringSetConverter implements AttributeConverter<Set<String>, Strin
 
     @Override
     public Set<String> convertToEntityAttribute(String dbData) {
-        return dbData == null ? new HashSet<>() : new HashSet<>(List.of(dbData.split(",")));
+        return (dbData == null || dbData.trim().isEmpty())
+                ? new HashSet<>()
+                : new HashSet<>(List.of(dbData.split(",")));
     }
 }

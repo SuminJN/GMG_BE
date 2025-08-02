@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gmg.jeukhaeng.auth.config.OAuthProperties;
 import com.gmg.jeukhaeng.auth.dto.KakaoUserInfo;
 import com.gmg.jeukhaeng.auth.util.JwtUtil;
+import com.gmg.jeukhaeng.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -22,6 +23,7 @@ public class KakaoOAuthService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final JwtUtil jwtUtil;
     private final OAuthProperties properties;
+    private final UserService userService;
 
     public String processKakaoLogin(String code) {
         // 1. 토큰 요청
@@ -31,7 +33,12 @@ public class KakaoOAuthService {
         KakaoUserInfo userInfo = getUserInfo(accessToken);
 
         // 3. 사용자 정보로 회원가입 or 로그인
-        // 생략: DB 조회 및 회원 생성 등
+        userService.findOrCreate(
+                "kakao",
+                String.valueOf(userInfo.getId()),
+                userInfo.getEmail(),
+                userInfo.getNickname()
+        );
 
         // 4. JWT 발급
         return jwtUtil.generateToken(userInfo.getEmail());
@@ -75,8 +82,9 @@ public class KakaoOAuthService {
             JsonNode json = objectMapper.readTree(response.getBody());
             Long id = json.get("id").asLong();
             String email = json.get("kakao_account").get("email").asText();
-            log.info("Kakao User Info - ID: {}, Email: {}", id, email);
-            return new KakaoUserInfo(id, email);
+            String nickname = json.get("properties").get("nickname").asText();
+            log.info("Kakao User Info - ID: {}, Email: {}, Nickname: {}", id, email, nickname);
+            return new KakaoUserInfo(id, email, nickname);
         } catch (Exception e) {
             throw new RuntimeException("유저 정보 파싱 실패", e);
         }

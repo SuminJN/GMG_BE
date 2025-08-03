@@ -31,13 +31,27 @@ spring:
                             - account_email
                         client-authentication-method: client_secret_post
                         client-name: Kakao
+                    google:
+                        client-id: ${GOOGLE_CLIENT_ID}
+                        client-secret: ${GOOGLE_CLIENT_SECRET}
+                        redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+                        authorization-grant-type: authorization_code
+                        scope:
+                            - email
+                            - profile
+                        client-authentication-method: client_secret_post
+                        client-name: Google
                 provider:
                     kakao:
                         authorization-uri: https://kauth.kakao.com/oauth/authorize
                         token-uri: https://kauth.kakao.com/oauth/token
                         user-info-uri: https://kapi.kakao.com/v2/user/me
                         user-name-attribute: id
-
+                    google:
+                        authorization-uri: https://accounts.google.com/o/oauth2/auth
+                        token-uri: https://oauth2.googleapis.com/token
+                        user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+                        user-name-attribute: sub
 jwt:
     secret: ${JWT_SECRET_KEY}
     expiration: 3600000 # 1시간

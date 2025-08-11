@@ -33,7 +33,7 @@ class AreaServiceTest {
             assertNotNull(content.getContentTypeId(), "Content Type ID should not be null");
             assertNotNull(content.getMapX(), "Map X should not be null");
             assertNotNull(content.getMapY(), "Map Y should not be null");
-            assertNotNull(content.getAddr(), "Address should not be null");
+            assertNotNull(content.getAddr1(), "Address should not be null");
         });
 
     }

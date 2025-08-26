@@ -8,6 +8,7 @@ import com.gmg.jeukhaeng.trip.dto.TripResponseDto;
 import com.gmg.jeukhaeng.trip.dto.TripListResponseDto;
 import com.gmg.jeukhaeng.trip.entity.Trip;
 import com.gmg.jeukhaeng.trip.entity.TripContent;
+import com.gmg.jeukhaeng.trip.entity.TripStatus;
 import com.gmg.jeukhaeng.trip.repository.TripRepository;
 import com.gmg.jeukhaeng.user.entity.User;
 import com.gmg.jeukhaeng.user.repository.UserRepository;
@@ -213,5 +214,62 @@ public class TripService {
                 .sequence(tripContent.getSequence())
                 .content(contentDto)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TripListResponseDto> getPlannedTripList() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        return tripRepository.findByUserAndStatusOrderByCreatedAtDesc(user, TripStatus.PLANNED)
+                .stream().map(this::convertToTripListDto).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TripResponseDto getPlannedTripDetail(Long tripId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        Trip trip = tripRepository.findByTripIdAndUserAndStatus(tripId, user, TripStatus.PLANNED)
+                .orElseThrow(() -> new RuntimeException("예정된 여행을 찾을 수 없습니다."));
+        return convertToTripResponseDto(trip);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TripListResponseDto> getCompletedTripList() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        return tripRepository.findByUserAndStatusOrderByCreatedAtDesc(user, TripStatus.COMPLETED)
+                .stream().map(this::convertToTripListDto).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TripResponseDto getCompletedTripDetail(Long tripId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        Trip trip = tripRepository.findByTripIdAndUserAndStatus(tripId, user, TripStatus.COMPLETED)
+                .orElseThrow(() -> new RuntimeException("다녀온 여행을 찾을 수 없습니다."));
+        return convertToTripResponseDto(trip);
+    }
+
+
+    /** “다녀왔어요” 버튼 처리 (idempotent) */
+    @Transactional
+    public void completeTrip(Long tripId) {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        Trip trip = tripRepository.findByTripIdAndUser(tripId, user)
+                .orElseThrow(() -> new RuntimeException("여행 일정을 찾을 수 없습니다."));
+
+        trip.markCompleted(); // Trip 엔티티에 추가해둔 도메인 메서드 (status=COMPLETED, completedAt=now)
+        // 트랜잭션 종료 시 자동 반영
     }
 }

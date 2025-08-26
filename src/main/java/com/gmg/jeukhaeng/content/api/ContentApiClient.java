@@ -18,8 +18,8 @@ public class ContentApiClient {
     private final RestClient restClient = RestClient.create();
 
 
-    @Value("${api.api-base-url}")
-    private String baseUrl;
+    private final String baseUrl = "https://apis.data.go.kr/B551011/KorService2/areaBasedList2";
+
     @Value("${api.encoded-service-key}")
     private String encodedServiceKey;
 

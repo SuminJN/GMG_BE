@@ -1,4 +1,4 @@
-package com.gmg.jeukhaeng.content.response;
+package com.gmg.jeukhaeng.content.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

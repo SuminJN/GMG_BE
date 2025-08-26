@@ -66,3 +66,7 @@ jwt:
 
 frontend:
     redirect-base-url: ${FRONTEND_REDIRECT_BASE_URL}
+
+api:
+    api-base-url: ${TOUR_API_SERVICE_KEY}
+    encoded-service-key: ${ENCODED_SERVICE_KEY}

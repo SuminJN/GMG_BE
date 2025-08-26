@@ -2,8 +2,9 @@ package com.gmg.jeukhaeng.content.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gmg.jeukhaeng.content.dto.ContentDto;
-import com.gmg.jeukhaeng.content.response.ApiResponse;
+import com.gmg.jeukhaeng.content.entity.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -16,9 +17,11 @@ public class ContentApiClient {
 
     private final RestClient restClient = RestClient.create();
 
-    private final String baseUrl = "https://apis.data.go.kr/B551011/KorService2/areaBasedList2";
 
-    private final String encodedServiceKey = "Abx7rHO5J4uvKphplereXLu7nQaJmD7nVXrORrU7hNRH%2B8Wbdw4EaQs4Fy5c2%2Bb08%2BAgjYeX9Un9TJ%2Bco%2F94uQ%3D%3D";
+    @Value("${api.api-base-url}")
+    private String baseUrl;
+    @Value("${api.encoded-service-key}")
+    private String encodedServiceKey;
 
     public List<ContentDto> fetchContents(int page, int areaCode) {
         String uri = baseUrl

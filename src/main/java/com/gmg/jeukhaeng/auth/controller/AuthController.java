@@ -1,6 +1,9 @@
 package com.gmg.jeukhaeng.auth.controller;
 
 import com.gmg.jeukhaeng.auth.util.CookieUtil;
+import com.gmg.jeukhaeng.user.dto.MyPageResponseDto;
+import com.gmg.jeukhaeng.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,26 +25,19 @@ import java.util.Map;
 public class AuthController {
 
     private final CookieUtil cookieUtil;
-
+    private final UserService userService;
     /**
      * 현재 인증된 사용자 정보 조회
      * 
      * @return 사용자 정보
      */
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("authenticated", authentication != null && authentication.isAuthenticated());
-        response.put("principal", authentication != null ? authentication.getPrincipal() : null);
-        response.put("authorities", authentication != null ? authentication.getAuthorities() : null);
-        
-        log.info("현재 사용자 정보 조회: {}", response);
-        
-        return ResponseEntity.ok(response);
+    @Operation(summary = "마이페이지 조회", description = "마이페이지에서 내 정보가 표시됩니다.")
+
+    public ResponseEntity<MyPageResponseDto> me(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(userService.getMyPageByEmail(email));
     }
-    
     /**
      * 로그아웃 (쿠키 제거)
      * 

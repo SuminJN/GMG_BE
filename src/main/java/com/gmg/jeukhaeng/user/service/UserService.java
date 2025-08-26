@@ -1,5 +1,6 @@
 package com.gmg.jeukhaeng.user.service;
 
+import com.gmg.jeukhaeng.user.dto.MyPageResponseDto;
 import com.gmg.jeukhaeng.user.entity.User;
 import com.gmg.jeukhaeng.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -20,6 +21,13 @@ public class UserService {
     public User findOrCreate(String provider, String providerId, String email, String nickname) {
         return findUser(provider, providerId, email)
                 .orElseGet(() -> createUser(provider, providerId, email, nickname));
+    }
+
+    @Transactional
+    public MyPageResponseDto getMyPageByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("사용자를 찾을 수 없습니다: " + email));
+        return MyPageResponseDto.from(user);
     }
 
     private Optional<User> findUser(String provider, String providerId, String email) {

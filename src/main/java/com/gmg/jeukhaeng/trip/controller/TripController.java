@@ -10,12 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -56,5 +51,40 @@ public class TripController {
         TripResponseDto trip = tripService.getTripDetail(tripId);
         
         return ResponseEntity.ok(trip);
+    }
+
+    @GetMapping("/me/planned")
+    @Operation(summary = "생성한 여행 일정 전체 조회", description = "생성한 여행 일정의 전체 정보를 조회합니다.")
+    public ResponseEntity<List<TripListResponseDto>> myPlannedTrips() {
+        return ResponseEntity.ok(tripService.getPlannedTripList());
+    }
+
+    @GetMapping("/me/planned/{tripId}")
+    @Operation(summary = "생성한 여행 일정 상세 조회", description = "특정 생성한 여행 일정의 상세 정보를 조회합니다.")
+
+    public ResponseEntity<TripResponseDto> myPlannedTripDetail(@PathVariable Long tripId) {
+        return ResponseEntity.ok(tripService.getPlannedTripDetail(tripId));
+    }
+
+    // 다녀온 목록/상세
+    @GetMapping("/me/completed")
+    @Operation(summary = "다녀온 여행 전체 조회", description = "다녀온 여행 일정의 전체 정보를 조회합니다.")
+    public ResponseEntity<List<TripListResponseDto>> myCompletedTrips() {
+        return ResponseEntity.ok(tripService.getCompletedTripList());
+    }
+
+    @GetMapping("/me/completed/{tripId}")
+    @Operation(summary = "다녀온 여행 상세 조회", description = "다녀온 여행 일정의 상세 정보를 조회합니다.")
+    public ResponseEntity<TripResponseDto> myCompletedTripDetail(@PathVariable Long tripId) {
+        return ResponseEntity.ok(tripService.getCompletedTripDetail(tripId));
+    }
+
+
+    // “다녀왔어요” 버튼
+    @PatchMapping("/{tripId}/complete")
+    @Operation(summary = "다녀왔어요 버튼", description = "여행 일정의 상태를 다녀옴으로 바꿈.")
+    public ResponseEntity<Void> complete(@PathVariable Long tripId) {
+        tripService.completeTrip(tripId);
+        return ResponseEntity.noContent().build();
     }
 }

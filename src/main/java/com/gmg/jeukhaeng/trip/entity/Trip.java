@@ -18,6 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Trip {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tripId;
@@ -37,6 +38,13 @@ public class Trip {
     @Builder.Default
     private List<TripContent> tripContents = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private TripStatus status = TripStatus.PLANNED;
+
+    private LocalDateTime completedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -55,5 +63,13 @@ public class Trip {
         }
         this.tripContents.add(tripContent);
         tripContent.assignTrip(this);
+    }
+
+    // ▼ 상태 변경 도메인 메서드
+    public void markCompleted() {
+        if (this.status != TripStatus.COMPLETED) {
+            this.status = TripStatus.COMPLETED;
+            this.completedAt = LocalDateTime.now();
+        }
     }
 }

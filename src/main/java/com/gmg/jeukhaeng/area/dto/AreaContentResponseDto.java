@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class AreaContentResponseDto {
 
-    private int contentId;
+    private String contentId;
     private String title;
     private String addr1;
     private String zipcode;

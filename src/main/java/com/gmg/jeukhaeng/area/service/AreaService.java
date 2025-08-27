@@ -1,88 +1,75 @@
 package com.gmg.jeukhaeng.area.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.gmg.jeukhaeng.area.dto.AreaContentResponseDto;
+import com.gmg.jeukhaeng.area.dto.AreaInfoResponseDto;
+import com.gmg.jeukhaeng.area.dto.PagedAreaContentResponseDto;
 import com.gmg.jeukhaeng.area.entity.AreaInfo;
+import com.gmg.jeukhaeng.content.entity.Content;
+import com.gmg.jeukhaeng.content.repository.ContentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AreaService {
 
-    @Value("${tour-api-service-key}")
-    private String SERVICE_KEY;
+    private final ContentRepository contentRepository;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    public PagedAreaContentResponseDto getAreaContents(String area, String sigungu, Pageable pageable) {
 
-    public List<AreaContentResponseDto> getAreaContents(String area, String sigungu) {
+        String areaCodeByName = String.valueOf(AreaInfo.getAreaCodeByName(area));
+        String sigunguCodeByName = String.valueOf(AreaInfo.getSigunguCodeByName(area, sigungu));
 
-        int areaCodeByName = AreaInfo.getAreaCodeByName(area);
-        int sigunguCodeByName = AreaInfo.getSigunguCodeByName(area, sigungu);
+        Page<Content> contentPage =
+                contentRepository.findByAreaCodeAndSigunguCode(areaCodeByName, sigunguCodeByName, pageable);
 
-        URI uri = UriComponentsBuilder
-                .fromHttpUrl("https://apis.data.go.kr/B551011/KorService2/areaBasedList2")
-                .queryParam("serviceKey", SERVICE_KEY)
-                .queryParam("MobileApp", "test")
-                .queryParam("MobileOS", "ETC")
-                .queryParam("_type", "json")
-                .queryParam("areaCode", areaCodeByName)
-                .queryParam("sigunguCode", sigunguCodeByName)
-                .build(true)
-                .toUri();
+        List<AreaContentResponseDto> result = new ArrayList<>();
+        contentPage.getContent().forEach(content -> {
+            AreaContentResponseDto dto = new AreaContentResponseDto();
+            dto.setContentId(content.getContentId());
+            dto.setTitle(content.getTitle());
+            dto.setAddr1(content.getAddr());
+            dto.setZipcode(content.getZipcode());
+            dto.setTel(content.getTel());
+            dto.setContentTypeId(content.getContentTypeId());
+            dto.setAreaCode(content.getAreaCode());
+            dto.setSigunguCode(content.getSigunguCode());
+            dto.setFirstImage(content.getFirstImage());
+            dto.setFirstImage2(content.getFirstImage2());
+            dto.setMapX(content.getMapX());
+            dto.setMapY(content.getMapY());
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            result.add(dto);
+        });
 
-        HttpEntity<?> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<JsonNode> response = restTemplate.exchange(
-                uri,
-                HttpMethod.GET,
-                entity,
-                JsonNode.class
+        return new PagedAreaContentResponseDto(
+                result,
+                contentPage.getNumber(),
+                contentPage.getSize(),
+                contentPage.getTotalElements(),
+                contentPage.getTotalPages(),
+                contentPage.isFirst(),
+                contentPage.isLast(),
+                contentPage.isEmpty()
         );
+    }
 
-        if (response.getStatusCode() == HttpStatus.OK) {
-
-            JsonNode items = response.getBody().path("response").path("body").path("items");
-
-            if (items.isMissingNode() || items.isEmpty()) {
-                return List.of();  // items가 없거나 비어있으면 빈 리스트 반환
-            }
-
-            List<AreaContentResponseDto> result = new ArrayList<>();
-
-            for(JsonNode item : items.path("item")) {
-                AreaContentResponseDto content = new AreaContentResponseDto();
-                content.setContentId(item.path("contentid").asInt());
-                content.setTitle(item.path("title").asText());
-                content.setAddr1(item.path("addr1").asText());
-                content.setZipcode(item.path("zipcode").asText());
-                content.setTel(item.path("tel").asText());
-                content.setContentTypeId(item.path("contenttypeid").asText());
-                content.setAreaCode(item.path("areacode").asText());
-                content.setSigunguCode(item.path("sigungucode").asText());
-                content.setFirstImage(item.path("firstimage").asText());
-                content.setFirstImage2(item.path("firstimage2").asText());
-                content.setMapX(item.path("mapx").asText());
-                content.setMapY(item.path("mapy").asText());
-
-                result.add(content);
-            }
-
-            return result;
-
-        } else {
-            throw new RuntimeException("Failed to fetch area contents: " + response.getStatusCode());
-        }
+    /**
+     * 모든 지역 정보를 반환
+     */
+    public List<AreaInfoResponseDto> getAllAreaInfo() {
+        return Arrays.stream(AreaInfo.values())
+                .map(areaInfo -> new AreaInfoResponseDto(
+                        areaInfo.getAreaName(),
+                        areaInfo.getSigunguMap()
+                ))
+                .collect(Collectors.toList());
     }
 }

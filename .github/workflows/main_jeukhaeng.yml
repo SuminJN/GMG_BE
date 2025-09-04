@@ -3,7 +3,11 @@ name: Build and Deploy Spring Boot App to Azure WebApp - jeukhaeng
 on:
   push:
     branches:
-      - main   # main 브랜치에 push 될 때 실행
+      - main
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build:

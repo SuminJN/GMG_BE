@@ -41,10 +41,16 @@ jobs:
         with:
           name: java-app
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_1A24319D38E64C76A92A1558F14BBFAA }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A6EE6C7F343E486D83474826327C283E }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5766D8A2AA8C4F07A0830F37F8D48A59 }}
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'jeukhaeng'  # App Service 이름
+          app-name: 'jeukhaeng'
           slot-name: 'production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: '*.jar'

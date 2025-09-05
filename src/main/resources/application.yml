@@ -55,14 +55,6 @@ spring:
 jwt:
     secret: ${JWT_SECRET_KEY}
     expiration: 3600000 # 1시간
-    cookie:
-        name: jeukhaeng_access_token
-        max-age: 3600 # 1시간
-        path: /
-        domain:
-        secure: false # 로컬 개발 환경에서는 false, 프로덕션에서는 true
-        http-only: true
-        same-site: lax # lax, strict, none 중 선택
 
 frontend:
     redirect-base-url: ${FRONTEND_REDIRECT_BASE_URL}

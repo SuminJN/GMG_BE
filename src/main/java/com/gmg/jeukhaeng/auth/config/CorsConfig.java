@@ -12,7 +12,7 @@ import java.util.Arrays;
 /**
  * CORS 설정을 담당하는 클래스
  * 
- * 프론트엔드에서 쿠키를 포함한 요청을 허용하도록 설정
+ * 프론트엔드에서 Authorization 헤더를 포함한 요청을 허용하도록 설정
  */
 @Configuration
 public class CorsConfig {
@@ -40,14 +40,11 @@ public class CorsConfig {
         "Access-Control-Request-Method",
         "Access-Control-Request-Headers"));
 
-    // 쿠키 포함 허용
-    configuration.setAllowCredentials(true);
+    // 더 이상 쿠키를 사용하지 않으므로 false로 설정
+    configuration.setAllowCredentials(false);
 
     // 노출할 헤더
-    configuration.setExposedHeaders(Arrays.asList(
-        "Set-Cookie",
-        "Access-Control-Allow-Origin",
-        "Access-Control-Allow-Credentials"));
+    configuration.setExposedHeaders(Arrays.asList("Access-Control-Allow-Origin"));
 
     // 프리플라이트 요청 캐시 시간 (1시간)
     configuration.setMaxAge(3600L);

@@ -1,10 +1,8 @@
 package com.gmg.jeukhaeng.auth.filter;
 
-import com.gmg.jeukhaeng.auth.util.CookieUtil;
 import com.gmg.jeukhaeng.auth.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +19,7 @@ import java.util.Collections;
 
 /**
  * JWT 토큰을 검증하고 Spring Security 인증 컨텍스트에 사용자 정보를 설정하는 필터
- * Authorization 헤더와 쿠키에서 JWT 토큰을 읽어 인증을 처리합니다.
+ * Authorization 헤더에서 JWT 토큰을 읽어 인증을 처리합니다.
  */
 @Slf4j
 @Component
@@ -29,7 +27,6 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final CookieUtil cookieUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -67,22 +64,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 쿠키에서 access_token 확인
+     * Authorization 헤더에서 JWT 토큰을 추출합니다.
      * 
      * @param request HTTP 요청
      * @return JWT 토큰 (없으면 null)
      */
     private String extractTokenFromRequest(HttpServletRequest request) {
-        // 쿠키에서 토큰 추출
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            String cookieName = cookieUtil.getCookieName();
-            
-            for (Cookie cookie : cookies) {
-                if (cookieName.equals(cookie.getName()) && StringUtils.hasText(cookie.getValue())) {
-                    return cookie.getValue();
-                }
-            }
+        // Authorization 헤더에서 토큰 추출
+        String bearerToken = request.getHeader("Authorization");
+        
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7); // "Bearer " 제거
         }
 
         return null;

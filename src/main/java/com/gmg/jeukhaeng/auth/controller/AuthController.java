@@ -1,6 +1,5 @@
 package com.gmg.jeukhaeng.auth.controller;
 
-import com.gmg.jeukhaeng.auth.util.CookieUtil;
 import com.gmg.jeukhaeng.user.dto.MyPageResponseDto;
 import com.gmg.jeukhaeng.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +22,6 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final CookieUtil cookieUtil;
     private final UserService userService;
     /**
      * 현재 인증된 사용자 정보 조회
@@ -37,26 +34,5 @@ public class AuthController {
     public ResponseEntity<MyPageResponseDto> me(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(userService.getMyPageByEmail(email));
-    }
-    /**
-     * 로그아웃 (쿠키 제거)
-     * 
-     * @param response HTTP 응답 객체
-     * @return 로그아웃 성공 메시지
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
-        // JWT 쿠키 제거
-        cookieUtil.removeJwtCookie(response);
-        
-        // SecurityContext 클리어
-        SecurityContextHolder.clearContext();
-        
-        Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("message", "로그아웃이 완료되었습니다.");
-        
-        log.info("사용자 로그아웃 완료");
-        
-        return ResponseEntity.ok(responseBody);
     }
 } 

@@ -1,6 +1,5 @@
 package com.gmg.jeukhaeng.auth.handler;
 
-import com.gmg.jeukhaeng.auth.util.CookieUtil;
 import com.gmg.jeukhaeng.auth.util.JwtUtil;
 import com.gmg.jeukhaeng.user.entity.User;
 import com.gmg.jeukhaeng.user.service.UserService;
@@ -17,6 +16,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
@@ -26,7 +27,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
     private final JwtUtil jwtUtil;
     private final UserService userService;
-    private final CookieUtil cookieUtil;
 
     @Value("${frontend.redirect-base-url}")
     private String frontendRedirectBaseUrl;
@@ -61,14 +61,10 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             
             // JWT 토큰 생성
             String jwtToken = jwtUtil.generateToken(user.getEmail());
-            
-            // JWT 토큰을 HttpOnly 쿠키로 설정
-            cookieUtil.setJwtCookie(response, jwtToken);
-            
-            log.info("JWT 토큰을 쿠키로 설정 완료: {}", jwtToken.substring(0, 20) + "...");
-            
-            // 프론트엔드로 리다이렉트 (쿠키에 JWT가 포함됨)
-            String redirectUrl = frontendRedirectBaseUrl + "/login/success";
+
+            // 프론트엔드로 리다이렉트 (토큰을 쿼리 파라미터로 전달)
+            String encodedToken = URLEncoder.encode(jwtToken, StandardCharsets.UTF_8);
+            String redirectUrl = frontendRedirectBaseUrl + "/login/success?token=" + encodedToken;
             
             log.info("프론트엔드로 리다이렉트: {}", redirectUrl);
             

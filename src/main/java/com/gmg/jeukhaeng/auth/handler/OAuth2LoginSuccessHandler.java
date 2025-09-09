@@ -1,6 +1,7 @@
 package com.gmg.jeukhaeng.auth.handler;
 
-import com.gmg.jeukhaeng.auth.util.JwtUtil;
+import com.gmg.jeukhaeng.auth.dto.TokenResponseDto;
+import com.gmg.jeukhaeng.auth.service.RefreshTokenService;
 import com.gmg.jeukhaeng.user.entity.User;
 import com.gmg.jeukhaeng.user.service.UserService;
 import jakarta.servlet.ServletException;
@@ -25,8 +26,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final JwtUtil jwtUtil;
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${frontend.redirect-base-url}")
     private String frontendRedirectBaseUrl;
@@ -59,12 +60,14 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             // 사용자 정보로 회원가입 또는 로그인 처리
             User user = userService.findOrCreate(provider, providerId, email, nickname);
             
-            // JWT 토큰 생성
-            String jwtToken = jwtUtil.generateToken(user.getEmail());
+            // JWT 토큰 쌍 생성 (액세스 토큰 + 리프레시 토큰)
+            TokenResponseDto tokenResponse = refreshTokenService.generateTokens(user.getEmail());
 
-            // 프론트엔드로 리다이렉트 (토큰을 쿼리 파라미터로 전달)
-            String encodedToken = URLEncoder.encode(jwtToken, StandardCharsets.UTF_8);
-            String redirectUrl = frontendRedirectBaseUrl + "/login/success?token=" + encodedToken;
+            // 프론트엔드로 리다이렉트 (토큰들을 쿼리 파라미터로 전달)
+            String encodedAccessToken = URLEncoder.encode(tokenResponse.getAccessToken(), StandardCharsets.UTF_8);
+            String encodedRefreshToken = URLEncoder.encode(tokenResponse.getRefreshToken(), StandardCharsets.UTF_8);
+            String redirectUrl = frontendRedirectBaseUrl + "/login/success?accessToken=" + encodedAccessToken 
+                                + "&refreshToken=" + encodedRefreshToken;
             
             log.info("프론트엔드로 리다이렉트: {}", redirectUrl);
             

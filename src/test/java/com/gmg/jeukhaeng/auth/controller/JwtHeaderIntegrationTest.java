@@ -1,5 +1,8 @@
 package com.gmg.jeukhaeng.auth.controller;
 
+import com.gmg.jeukhaeng.auth.config.TestSecurityConfig;
+import com.gmg.jeukhaeng.auth.filter.JwtAuthenticationFilter;
+import com.gmg.jeukhaeng.auth.service.RefreshTokenService;
 import com.gmg.jeukhaeng.auth.util.JwtUtil;
 import com.gmg.jeukhaeng.user.service.UserService;
 import com.gmg.jeukhaeng.user.dto.MyPageResponseDto;
@@ -16,7 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
-@Import({JwtUtil.class})
+@Import({JwtUtil.class, TestSecurityConfig.class, JwtAuthenticationFilter.class})
 @DisplayName("JWT 헤더 요청 통합 테스트")
 class JwtHeaderIntegrationTest {
 
@@ -26,15 +29,18 @@ class JwtHeaderIntegrationTest {
     @MockBean
     private UserService userService;
 
+    @MockBean
+    private RefreshTokenService refreshTokenService;
+
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Test
-    @DisplayName("유효한 JWT 토큰이 포함된 Authorization 헤더로 /api/auth/me 요청 시 성공")
-    void shouldSucceedWithValidJwtTokenInAuthorizationHeader() throws Exception {
+        @Test
+    @DisplayName("유효한 액세스 토큰이 포함된 Authorization 헤더로 /api/auth/me 요청 시 성공")
+    void shouldSucceedWithValidAccessTokenInAuthorizationHeader() throws Exception {
         // given
         String userEmail = "test@example.com";
-        String validToken = jwtUtil.generateToken(userEmail);
+        String validToken = jwtUtil.generateAccessToken(userEmail);
         
         MyPageResponseDto mockResponse = MyPageResponseDto.builder()
                 .email(userEmail)
@@ -73,11 +79,11 @@ class JwtHeaderIntegrationTest {
     }
 
     @Test
-    @DisplayName("유효하지 않은 JWT 토큰으로 /api/auth/me 요청 시 401 Unauthorized")
-    void shouldReturn401WhenInvalidJwtToken() throws Exception {
+    @DisplayName("유효하지 않은 액세스 토큰으로 /api/auth/me 요청 시 401 Unauthorized")
+    void shouldReturn401WhenInvalidAccessToken() throws Exception {
         // when & then
         mockMvc.perform(get("/api/auth/me")
-                        .header("Authorization", "Bearer invalid.jwt.token"))
+                        .header("Authorization", "Bearer invalid.access.token"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -107,7 +113,7 @@ class JwtHeaderIntegrationTest {
     void shouldWorkWithDifferentCaseAuthorizationHeader() throws Exception {
         // given
         String userEmail = "test@example.com";
-        String validToken = jwtUtil.generateToken(userEmail);
+        String validToken = jwtUtil.generateAccessToken(userEmail);
         
         MyPageResponseDto mockResponse = MyPageResponseDto.builder()
                 .email(userEmail)
@@ -126,26 +132,36 @@ class JwtHeaderIntegrationTest {
     }
 
     @Test
-    @DisplayName("JWT 토큰에 공백이 포함된 경우 정상 처리 확인")
+    @DisplayName("액세스 토큰에 공백이 포함된 경우에도 정상 처리 확인")
     void shouldHandleTokenWithSpaces() throws Exception {
         // given
         String userEmail = "test@example.com";
-        String validToken = jwtUtil.generateToken(userEmail);
+        String validToken = jwtUtil.generateAccessToken(userEmail);
         
-        // when & then - Bearer 뒤에 공백이 여러 개 있는 경우
+        MyPageResponseDto mockResponse = MyPageResponseDto.builder()
+                .email(userEmail)
+                .nickname("테스트유저")
+                .kakaoLinked(true)
+                .googleLinked(false)
+                .build();
+        
+        when(userService.getMyPageByEmail(userEmail)).thenReturn(mockResponse);
+        
+        // when & then - Bearer 뒤에 공백이 여러 개 있어도 토큰 추출 가능
         mockMvc.perform(get("/api/auth/me")
                         .header("Authorization", "Bearer  " + validToken))
-                .andExpect(status().isUnauthorized()); // 현재 구현에서는 정확히 하나의 공백만 처리
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(userEmail));
     }
 
     @Test
-    @DisplayName("다른 JWT 토큰으로 요청한 사용자 정보가 올바르게 구분되는지 확인")
+    @DisplayName("다른 액세스 토큰으로 요청한 사용자 정보가 올바르게 구분되는지 확인")
     void shouldDistinguishDifferentUsers() throws Exception {
         // given
         String userEmail1 = "user1@example.com";
         String userEmail2 = "user2@example.com";
-        String token1 = jwtUtil.generateToken(userEmail1);
-        String token2 = jwtUtil.generateToken(userEmail2);
+        String token1 = jwtUtil.generateAccessToken(userEmail1);
+        String token2 = jwtUtil.generateAccessToken(userEmail2);
         
         MyPageResponseDto mockResponse1 = MyPageResponseDto.builder()
                 .email(userEmail1)

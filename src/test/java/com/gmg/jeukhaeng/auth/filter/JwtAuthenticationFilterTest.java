@@ -46,15 +46,15 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("유효한 JWT 토큰이 포함된 Authorization 헤더로 요청 시 인증 성공")
-    void shouldAuthenticateWithValidJwtToken() throws ServletException, IOException {
+    @DisplayName("유효한 액세스 토큰이 포함된 Authorization 헤더로 요청 시 인증 성공")
+    void shouldAuthenticateWithValidAccessToken() throws ServletException, IOException {
         // given
-        String validToken = "valid.jwt.token";
+        String validToken = "valid.access.token";
         String userEmail = "test@example.com";
         String authorizationHeader = "Bearer " + validToken;
 
         when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
-        when(jwtUtil.validateTokenAndGetEmail(validToken)).thenReturn(userEmail);
+        when(jwtUtil.validateAccessTokenAndGetEmail(validToken)).thenReturn(userEmail);
 
         // when
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -67,7 +67,7 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication.getAuthorities().iterator().next().getAuthority()).isEqualTo("ROLE_USER");
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil).validateTokenAndGetEmail(validToken);
+        verify(jwtUtil).validateAccessTokenAndGetEmail(validToken);
     }
 
     @Test
@@ -102,7 +102,7 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil, never()).validateTokenAndGetEmail(any());
+        verify(jwtUtil, never()).validateAccessTokenAndGetEmail(any());
     }
 
     @Test
@@ -120,18 +120,18 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil, never()).validateTokenAndGetEmail(any());
+        verify(jwtUtil, never()).validateAccessTokenAndGetEmail(any());
     }
 
     @Test
-    @DisplayName("유효하지 않은 JWT 토큰으로 요청 시 인증 실패하고 SecurityContext 클리어")
-    void shouldClearSecurityContextWhenInvalidJwtToken() throws ServletException, IOException {
+    @DisplayName("유효하지 않은 액세스 토큰으로 요청 시 인증 실패하고 SecurityContext 클리어")
+    void shouldClearSecurityContextWhenInvalidAccessToken() throws ServletException, IOException {
         // given
-        String invalidToken = "invalid.jwt.token";
+        String invalidToken = "invalid.access.token";
         String authorizationHeader = "Bearer " + invalidToken;
 
         when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
-        when(jwtUtil.validateTokenAndGetEmail(invalidToken)).thenReturn(null);
+        when(jwtUtil.validateAccessTokenAndGetEmail(invalidToken)).thenReturn(null);
 
         // when
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -141,18 +141,18 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil).validateTokenAndGetEmail(invalidToken);
+        verify(jwtUtil).validateAccessTokenAndGetEmail(invalidToken);
     }
 
     @Test
-    @DisplayName("JWT 토큰 검증 중 예외 발생 시 SecurityContext 클리어하고 필터 체인 진행")
-    void shouldClearSecurityContextWhenJwtValidationThrowsException() throws ServletException, IOException {
+    @DisplayName("액세스 토큰 검증 중 예외 발생 시 SecurityContext 클리어하고 필터 체인 진행")
+    void shouldClearSecurityContextWhenAccessTokenValidationThrowsException() throws ServletException, IOException {
         // given
-        String tokenCausingException = "problematic.jwt.token";
+        String tokenCausingException = "problematic.access.token";
         String authorizationHeader = "Bearer " + tokenCausingException;
 
         when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
-        when(jwtUtil.validateTokenAndGetEmail(tokenCausingException))
+        when(jwtUtil.validateAccessTokenAndGetEmail(tokenCausingException))
                 .thenThrow(new RuntimeException("JWT parsing error"));
 
         // when
@@ -163,7 +163,7 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil).validateTokenAndGetEmail(tokenCausingException);
+        verify(jwtUtil).validateAccessTokenAndGetEmail(tokenCausingException);
     }
 
     @Test
@@ -181,7 +181,7 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil, never()).validateTokenAndGetEmail(any());
+        verify(jwtUtil, never()).validateAccessTokenAndGetEmail(any());
     }
 
     @Test
@@ -199,18 +199,18 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil, never()).validateTokenAndGetEmail(any());
+        verify(jwtUtil, never()).validateAccessTokenAndGetEmail(any());
     }
 
     @Test
-    @DisplayName("JWT 검증은 성공하지만 사용자 이메일이 빈 문자열인 경우 인증 실패")
+    @DisplayName("액세스 토큰 검증은 성공하지만 사용자 이메일이 빈 문자열인 경우 인증 실패")
     void shouldNotAuthenticateWhenUserEmailIsEmpty() throws ServletException, IOException {
         // given
-        String validToken = "valid.jwt.token";
+        String validToken = "valid.access.token";
         String authorizationHeader = "Bearer " + validToken;
 
         when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
-        when(jwtUtil.validateTokenAndGetEmail(validToken)).thenReturn("");
+        when(jwtUtil.validateAccessTokenAndGetEmail(validToken)).thenReturn("");
 
         // when
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -220,18 +220,18 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil).validateTokenAndGetEmail(validToken);
+        verify(jwtUtil).validateAccessTokenAndGetEmail(validToken);
     }
 
     @Test
-    @DisplayName("JWT 검증은 성공하지만 사용자 이메일이 null인 경우 인증 실패")
+    @DisplayName("액세스 토큰 검증은 성공하지만 사용자 이메일이 null인 경우 인증 실패")
     void shouldNotAuthenticateWhenUserEmailIsNull() throws ServletException, IOException {
         // given
-        String validToken = "valid.jwt.token";
+        String validToken = "valid.access.token";
         String authorizationHeader = "Bearer " + validToken;
 
         when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
-        when(jwtUtil.validateTokenAndGetEmail(validToken)).thenReturn(null);
+        when(jwtUtil.validateAccessTokenAndGetEmail(validToken)).thenReturn(null);
 
         // when
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -241,6 +241,6 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil).validateTokenAndGetEmail(validToken);
+        verify(jwtUtil).validateAccessTokenAndGetEmail(validToken);
     }
 }

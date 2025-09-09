@@ -47,8 +47,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/oauth2/authorization/**").permitAll() // 로그인 시작 경로
-                        .requestMatchers("/api/**").permitAll() // 기타 API는 허용
-
                         .anyRequest().authenticated());
 
         return http.build();

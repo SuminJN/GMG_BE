@@ -38,8 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = extractTokenFromRequest(request);
 
             if (StringUtils.hasText(token)) {
-                // JWT 토큰 검증 및 사용자 정보 추출
-                String userEmail = jwtUtil.validateTokenAndGetEmail(token);
+                // 액세스 토큰 검증 및 사용자 정보 추출
+                String userEmail = jwtUtil.validateAccessTokenAndGetEmail(token);
 
                 if (StringUtils.hasText(userEmail)) {
                     // Spring Security 인증 객체 생성

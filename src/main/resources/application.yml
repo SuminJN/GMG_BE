@@ -54,7 +54,8 @@ spring:
                         user-name-attribute: sub
 jwt:
     secret: ${JWT_SECRET_KEY}
-    expiration: 3600000 # 1시간
+    access-token-expiration: 3600000 # 1시간 (1000 * 60 * 60)
+    refresh-token-expiration: 604800000 # 7일 (1000 * 60 * 60 * 24 * 7)
 
 frontend:
     redirect-base-url: ${FRONTEND_REDIRECT_BASE_URL}

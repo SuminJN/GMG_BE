@@ -63,3 +63,6 @@ frontend:
 api:
     encoded-service-key: ${TOUR_API_SERVICE_KEY}
 
+test:
+    account:
+        password: ${TEST_ACCOUNT_PASSWORD}

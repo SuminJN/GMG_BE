@@ -1,5 +1,6 @@
 package com.gmg.jeukhaeng.auth.controller;
 
+import com.gmg.jeukhaeng.auth.dto.TestLoginRequest;
 import com.gmg.jeukhaeng.auth.dto.TokenResponseDto;
 import com.gmg.jeukhaeng.auth.service.RefreshTokenService;
 import com.gmg.jeukhaeng.user.dto.MyPageResponseDto;
@@ -7,6 +8,7 @@ import com.gmg.jeukhaeng.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,7 +30,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     /**
      * 현재 인증된 사용자 정보 조회
-     * 
+     *
      * @return 사용자 정보
      */
     @GetMapping("/me")
@@ -40,7 +42,7 @@ public class AuthController {
 
     /**
      * 리프레시 토큰으로 새로운 액세스 토큰 발급
-     * 
+     *
      * @param refreshToken 리프레시 토큰
      * @return 새로운 액세스 토큰과 기존 리프레시 토큰
      */
@@ -48,7 +50,7 @@ public class AuthController {
     @Operation(summary = "토큰 갱신", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
     public ResponseEntity<TokenResponseDto> refreshToken(@RequestBody Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
-        
+
         if (refreshToken == null || refreshToken.trim().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -64,7 +66,7 @@ public class AuthController {
 
     /**
      * 로그아웃 - 리프레시 토큰 삭제
-     * 
+     *
      * @param authentication 인증 정보
      * @return 로그아웃 결과
      */
@@ -77,9 +79,27 @@ public class AuthController {
 
         String email = authentication.getName();
         refreshTokenService.deleteRefreshToken(email);
-        
+
         Map<String, String> response = new HashMap<>();
         response.put("message", "로그아웃되었습니다");
         return ResponseEntity.ok(response);
     }
-} 
+
+    /**
+     * 테스트 계정 로그인 (개발용)
+     * @param request 테스트 로그인 요청 (이메일, 비밀번호)
+     * @return JWT 토큰 쌍
+     */
+    @PostMapping("/test-login")
+    @Operation(summary = "테스트 계정 로그인", description = "개발 환경에서 테스트 계정으로 로그인합니다.")
+    public ResponseEntity<TokenResponseDto> testLogin(@RequestBody TestLoginRequest request) {
+        try {
+            TokenResponseDto tokenResponse = userService.loginTestAccount(request);
+            return ResponseEntity.ok(tokenResponse);
+        } catch (IllegalStateException e) {
+            log.warn("테스트 계정 로그인 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+}

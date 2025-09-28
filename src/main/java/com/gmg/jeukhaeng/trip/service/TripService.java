@@ -95,7 +95,7 @@ public class TripService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        List<Trip> trips = tripRepository.findByUserOrderByCreatedAtDesc(user);
+        List<Trip> trips = tripRepository.findByUserOrderByCreatedAtDescWithContents(user);
         
         return trips.stream()
                 .map(this::convertToTripListDto)
@@ -109,7 +109,7 @@ public class TripService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        Trip trip = tripRepository.findByTripIdAndUser(tripId, user)
+        Trip trip = tripRepository.findByTripIdAndUserWithContents(tripId, user)
                 .orElseThrow(() -> new RuntimeException("여행 일정을 찾을 수 없습니다."));
 
         return convertToTripResponseDto(trip);
@@ -222,7 +222,7 @@ public class TripService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        return tripRepository.findByUserAndStatusOrderByCreatedAtDesc(user, TripStatus.PLANNED)
+        return tripRepository.findByUserAndStatusOrderByCreatedAtDescWithContents(user, TripStatus.PLANNED)
                 .stream().map(this::convertToTripListDto).toList();
     }
 
@@ -232,7 +232,7 @@ public class TripService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        Trip trip = tripRepository.findByTripIdAndUserAndStatus(tripId, user, TripStatus.PLANNED)
+        Trip trip = tripRepository.findByTripIdAndUserAndStatusWithContents(tripId, user, TripStatus.PLANNED)
                 .orElseThrow(() -> new RuntimeException("예정된 여행을 찾을 수 없습니다."));
         return convertToTripResponseDto(trip);
     }
@@ -243,7 +243,7 @@ public class TripService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        return tripRepository.findByUserAndStatusOrderByCreatedAtDesc(user, TripStatus.COMPLETED)
+        return tripRepository.findByUserAndStatusOrderByCreatedAtDescWithContents(user, TripStatus.COMPLETED)
                 .stream().map(this::convertToTripListDto).toList();
     }
 
@@ -253,7 +253,7 @@ public class TripService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        Trip trip = tripRepository.findByTripIdAndUserAndStatus(tripId, user, TripStatus.COMPLETED)
+        Trip trip = tripRepository.findByTripIdAndUserAndStatusWithContents(tripId, user, TripStatus.COMPLETED)
                 .orElseThrow(() -> new RuntimeException("다녀온 여행을 찾을 수 없습니다."));
         return convertToTripResponseDto(trip);
     }
